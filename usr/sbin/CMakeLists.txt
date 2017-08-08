@@ -1,0 +1,8 @@
+add_subdirectory(sysd)
+add_subdirectory(netd)
+add_subdirectory(e1000d)
+add_subdirectory(kbd)
+add_subdirectory(vgad)
+add_subdirectory(daemond)
+add_subdirectory(statd)
+add_subdirectory(piped)

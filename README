@@ -1,0 +1,97 @@
+
+**************** What is Bear? (And what is Bear NOT) *************************
+
+This is a subset of the broader Bear system presented freely and openly for 
+  purely pedagogical purposes. In particular, it is designed to showcase the 
+  code described in "Symmetric Multiprocessing from Boot to Virtualization" 
+  as appearing in Software Practice and Experience and authored by Robert Denz,
+  Scott Brookes, Martin Osterloh, Stephen Kuhn, and Stephen Taylor.
+
+In general, it is important to note that Bear is a purely research operating 
+  system. This means that it is rough around the edges! It was not designed to 
+  be deployed in production and may not be portable, robust, secure, or 
+  reliable.
+
+However, Bear is small and fully featured. This means that it is relatively 
+  easy to wrap your mind around the system in its _entirety_, while still 
+  having access to full 64-bit memory addressing, multicore hardware, and 
+  type 1 virtualization. This combination is uniquely potent for prototyping 
+  and benchmarking dramatic OS technologies that would be extremely difficult 
+  to prototype on a full system like Linux.
+
+
+**************** Configuring, building, running the bear system. **************
+
+Configuring The System For Hardware Or Vmware:
+
+STEP 0: Harware compatibility: 
+     
+     This version of Bear is designed to be run EXCLUSIVELY on the Dell 9010 
+     workstation with a core i7 multicore processor. When running on a new 
+     workstation, make sure that the BIOS is configured to support 
+     virtualization.
+
+STEP 1: Make sure the serial line is set at the right speed:
+
+     sudo stty -F /dev/ttyUSB0 115200
+
+
+STEP 2) If there is no build.x86_64 directory, run the "mkbuild"
+script in the bear-v1.XXX directory:
+
+       ./mkbuild
+
+This will create the build.x86_64 directory, install newlib in it,
+together with some scripts.
+
+
+STEP 3) Change into the build.x86_64 directory
+
+
+STEP 4) Start dhcp:
+
+     ./start_dhcp eth0    --- typically dhcp is started on eth0
+
+
+STEP 5) BUILD BEAR
+
+The system is built using the "mkall" script. It can be build in several
+configuations as follows:
+
+    Usage: ./mkall [-c -rc -h -s]
+
+      -h     : prints this help
+
+    FIRST TIME USE -- 
+      -s     : standalone = -hw but no networking support
+
+    SUBSEQUENT USE:
+      no args: rebuild only whats changed
+      -c     : clean out object files and rebuild
+      -rc    : -c + clean out the CMake repository
+
+See the file "build_flags.txt" for a full list of args that
+the system can be compiled with for debugging, memory checking, etc.
+
+NOTES: 
+-- If you control-c out during the build process the build system
+may get screwed up. The following fixes this:
+
+    sudo losetup -d /dev/loop0
+
+
+STEP 6) At the shell prompt on the 9010, run the regression test suite using 
+the command:
+
+   : tests
+
+(NOTE there must be a space between the colon and the word "tests")
+
+You should see that 3 of the tests FAIL (6,8,10), the rest succeed;
+the ps -s command prints to the backchannel.
+
+
+
+
+
+

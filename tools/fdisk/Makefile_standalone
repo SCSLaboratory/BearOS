@@ -1,0 +1,37 @@
+#Disk size, in sectors.
+DISK_SIZE := 20480 # 20MB
+USER_DISK_SIZE := 2048 #16384 #8192 #10240 #1MB
+#DISK_SIZE := 32768 # 16MB
+#DISK_SIZE := $(shell echo `ls -l bear_hdd | awk '{print $5}'` / 512 + 8192 | bc) # disk size + 4MB
+
+# This creates the file bear_hdd which can then be used to run Bochs.
+# HACK: This does not have any dependencies, but you need to execute the
+#   following commands: make bootloader; make hypervisor; make kernelbin
+# This should be invoked with sudo, ie sudo make newdisk
+ls: disklabel
+	dd if=/dev/zero of=ls bs=512 count=$(USER_DISK_SIZE)
+	losetup /dev/loop0 ls
+	#-./fdisk_script.sh /dev/loop0
+	chmod ugo+rw ./ls
+	sh ./ls.sh ./ls
+	losetup -d /dev/loop0
+
+newdisk: disklabel
+	dd if=/dev/zero of=bear_hdd bs=512 count=$(DISK_SIZE)
+	losetup /dev/loop0 bear_hdd
+	dd if=../../build.x86_64/bin/mbr of=/dev/loop0 bs=512 count=1 seek=0
+	-./fdisk_script.sh /dev/loop0
+	./disklabel -m -w -b ../../build.x86_64/bin/boot2 -1 ../../build.x86_64/bin/boot1 ./bear_hdd
+	chmod ugo+rw ./bear_hdd
+	sh ./partition.sh.standalone ./bear_hdd
+	losetup -d /dev/loop0
+	sudo cp bear_hdd /tftpboot
+
+
+disklabel:
+	gcc -I. -o disklabel disklabel.c
+
+clean:
+	rm -f disklabel bear_hdd ls
+
+.PHONY: clean

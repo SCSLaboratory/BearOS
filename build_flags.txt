@@ -1,0 +1,70 @@
+Flags that must be used in the top-level CMakeLists.txt file
+  Default flags: 
+    -- STANDALONE - this build config of bear does not use networking 
+
+Debugging flags:
+  output related flags:
+    -- SERIAL_OUT_SYSTEM - print system messages onto the Serial line
+    -- VGA_OUT_SYSTEM    - print system messages over VGA
+    -- SERIAL_OUT_USER   - copy vga console output onto serial channel
+
+  General Debugging flags:
+    -- DEBUG            - general system debugging info
+    -- VK_DEBUG         - vk module debugging (sys/utils/vkalloc.c)
+    -- KVMEM_TRACKING   - kernel virtual memory allocation tracking
+    -- SMP_DEBUG        - multiprocessing debugging info 
+    -- DEBUG_ACPI       - acpi table processing debugging.
+    -- DEBUG_DMAR       - DMAR table processing debugging.
+    -- DEBUG_TSC        - tsc debugging (sys/utils/tsc.c)
+    -- ELF_DEBUG        - elf loader debugging
+    -- EXCEPTION_DEBUG  - print detailed messages during processor exceptions 
+    -- KERNEL_DEBUG     - general kernel bootstrapping/operation debugging 
+    -- KMALLOC_DEBUG    - internal kernel malloc module debugging
+    -- KMALLOC_TRACKING - kmalloc allocation tracking
+
+Optional system features
+    -- ENABLE_SMP - symmetric multiprocessing.
+
+Additional (experimental) features -
+
+   ** NOTE: Although each of these features has a compatibility note, those 
+            caveats pertain only to the current state of implementation. 
+	    In theory, almost all of these features are compatible with one 
+	    another.
+
+  (Uber)Diversity - described in forthcoming diversity paper, this randomizes 
+           all virtual memory regions in hypervisor, kernel, and user 
+	   processes. 
+    -> COMPATABILITY: currently working with most functional features.  
+    -> TO ENABLE: use System build flag "DIVERSITY" (optional: DIVERSITY_DEBUG)
+    
+  Execute-only Kernel Code: See ExOShim paper in ICCWS '16. 2 techniques for 
+          marking kernel code as execute only... one in a special 
+	  virtualization shim (as described in the paper) and another by 
+	  marking the EPTs in the regular bear hypervisor.
+    -> Full hypervisor method - 
+      --> COMPATABILITY: Currently working in all builds. Incompatible with
+          the hypervisor shim.
+      --> TO ENABLE: System build flag XONLY_BEAR_HYPV
+    -> Shim method (exoshim proper) -
+      --> COMPATABILITY: Has not been tested in this version of the release.
+      --> TO ENABLE: system build flag HYPV_SHIM (optional: DEBUG_SHIM)
+
+  Kernel Procedure Linkeage Table (KPLT): See KPLT Paper in MILCOM '15. Adds a 
+         layer of indirection so that differnt processes kernel mappings use 
+	 unique virtual addresses for shared functionality.
+    -> COMPATABILITY: Has not been tested in this version of the release.
+    -> TO ENABLE: System build flag KPLT 
+
+Networking related stuff: 
+  This release of bear does not support networking in order to avoid GPL 
+    licensing issues with the NFS library. However, in the interest 
+    of supporting following development efforts, some of the networking 
+    functionality may have been left in the code. The following build flags 
+    relate to networking and therefore should be considered unsupported and 
+    untested.
+    -- NET_DEBUG
+    -- NIC_DEBUG 
+    -- BEARNFS
+    -- BEAR_USERLAND_NET
+

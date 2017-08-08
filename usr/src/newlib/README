@@ -1,0 +1,61 @@
+Building newlib:
+
+The mkbuild script in the root directory installs newlib. These
+instructions are here to provide info for updating to a new version of
+newlib.
+
+Note that x86-64 architecture in bear is x86_64 in newlib.
+
+1) Note that the configure script will look for the $TARGET-gcc as the
+compiler.  Therefore you must ensure that there is a link from gcc to
+the $TARGET-gcc, The same applies to the linker and the archiving
+tool.  e.g.
+
+sudo ln -s /usr/bin/gcc /usr/bin/x86_64-pc-elf-gcc
+sudo ln -s /usr/bin/cc /usr/bin/x86_64-pc-elf-cc
+sudo ln -s /usr/bin/ar /usr/bin/x86_64-pc-elf-ar
+sudo ln -s /usr/bin/ld /usr/bin/x86_64-pc--elfld
+sudo ln -s /usr/bin/ranlib /usr/bin/x86_64-pc-elf-ranlib
+
+2) You must make sure makeinfo (part of texinfo) is installed, e.g. on
+ubuntu:
+
+sudo apt-get install texinfo
+
+
+3) Building newlib
+
+To build newlib in the build.x86_64 directory perform, from this
+directory (/usr/src/newlib/) with the README file, the following
+commands:
+
+mkdir build.x86_64
+cd build.x86_64
+CFLAGS="-mcmodel=large" ../newlib-2.0.0/configure --target=x86_64-pc-elf --prefix=`pwd` --disable-multilib
+make all
+make install
+
+In general:
+
+../newlib-2.0.0/configure --target=$TARGET --prefix=$PREFIX
+
+TARGET = is the architecture you are developing for e.g x86_64-pc-elf
+PREFIX = location to put the output libraries and include files
+
+Note: after the "make install" the libraries are located in:
+
+build.86_64/x86_64-pc-elf/lib   --- i.e. the TARGET
+build.86_64/x86_64-pc-elf/include   --- i.e. the TARGET
+
+The libgloss directory is a non-sys version that is not used.
+
+4) The cmake directory structure uses two symbolic links to access newlib.
+
+From the root directory (bear.v3/), execute:
+
+mkdir -p build.x86_64/lib
+cd build.x86_64/lib
+ln -s ../../usr/src/newlib/build.x86_64/x86_64-pc-elf/include/ ../../usr/include/newlib
+ln -s ../../usr/src/newlib/build.x86_64/x86_64-pc-elf/lib ./newlib
+
+This will allow cmake to find newlib.

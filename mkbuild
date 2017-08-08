@@ -1,0 +1,53 @@
+#!/bin/bash
+# Get current working directory without path
+cwd=${PWD##*/}
+
+# remove and rebuild any old build directory
+if [ -d ./build.x86_64 ]; then
+    rm -rf ./build.x86_64
+fi
+mkdir ./build.x86_64
+echo ${PWD}
+# go there and build a lib directory
+pushd ./build.x86_64
+echo ${PWD}
+mkdir ./lib
+# remove symbolic link to old includes
+if [ -L ../usr/include/newlib ]; then
+    rm -f ../usr/include/newlib
+fi
+# remove and replace the newlib build directory 
+if [ -d ../usr/src/newlib/build.x86_64 ]; then 
+    rm -rf ../usr/src/newlib/build.x86_64
+fi
+mkdir ../usr/src/newlib/build.x86_64
+# go there
+pushd ../usr/src/newlib/build.x86_64
+echo "[building newlib]"
+# build newlib
+CFLAGS="-mcmodel=large -DSIGNAL_PROVIDED" ../newlib-2.0.0/configure --target=x86_64-pc-elf --prefix=`pwd` --disable-multilib
+make clean
+make all
+make install
+# go back to the system build directory
+popd
+pushd ./lib
+echo "[installing newlib]"
+# install newlib
+ln -s ../../usr/src/newlib/build.x86_64/x86_64-pc-elf/include/ ../../usr/include/newlib
+ln -s ../../usr/src/newlib/build.x86_64/x86_64-pc-elf/lib/ ./newlib
+if [ -f ./newlib/libnosys.a ]; then
+    echo "[Removing ./newlib/libnosys.a]" ;
+    rm -f ./newlib/libnosys.a
+fi
+if [ -f ./newlib/libnosys.a ]; then
+    echo "[Error -- libnosys.a not removed!]" ;
+fi
+# show the installation to verify libnosys is gone
+echo "[newlib installed -- verify libnosys.a is not present]"
+popd
+cp ../scripts/mkall .
+cp ../scripts/start_dhcp .
+popd
+echo "[Now in ${PWD}]"
+echo "cd to the build directory, use start_dhcp, then use mkall"

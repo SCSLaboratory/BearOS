@@ -1,0 +1,14 @@
+syntax: glob
+
+*~
+*.o
+*.orig
+*.bak
+*.swp
+build.x86_64
+usr/src/newlib/build.x86_64
+usr/include/newlib
+tools/fdisk/bear_hdd
+tools/fdisk/disklabel
+tools/fdisk/Makefile
+

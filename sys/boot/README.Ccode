@@ -1,0 +1,48 @@
+The boot loader, after stage 1, jumps to our code that's written in
+C. (At this point protected mode should already be set up, because GCC
+and presumably clang only output in protected/long mode). The C code
+we link is output as a _flat binary file_. The mechanism that allows
+this all to work is a little arcane, so it's described in this file.
+
+On the C compile/assemble/link side:
+- Make sure the code has an entry point, called "start".
+- Define the prototype of main with the "section" attribute. The
+  section must be called "startpoint".
+- Compile with clang, as usual.
+- Link with "-T boot.ld", which is our special linker script. This
+  script places the startpoint section at the very top of the file,
+  the text underneath, and the data under that. Every other section is
+  discarded.
+- When we jump to the code, we'll be going to that location 0 (which
+  gets loaded at the top of the memory where we read from the disk).
+- The assembler and linker generate CALL and JMP instructions with
+  relative offsets, which are preserved when loaded.
+
+On the boot-loader assembly side:
+- We set up the GDT.
+- We enter protected mode.
+- We enter long mode. (FIXME: Will the following still be correct in long mode?)
+- Do the following:
+  - push the new SS on the stack       (stack segment)
+  - push the new ESP on the stack      (stack pointer)
+  - push the new flags on the stack
+  - push the new CS on the stack       (code segment)
+  - push the new EIP on the stack      (instruction pointer, where to jump)
+  - push the new GS on the stack       (should be 0)
+  - push the new FS on the stack       (should be 0)
+  - push the new DS on the stack       (should be 0)
+  - push the new ES on the stack       (should be 0)
+  - push the new EAX on the stack      (in btx it was the user base memory addr)
+  - push 0x0 7 more times              (leftover general registers)
+  - popa
+  - pop es, ds, fs, and gs
+  - iret (this will return to the EIP we pushed!)
+- Now you're in the C entry point we defined earlier, hurray.
+- Now the C code must do the following:
+  - Set up the TSS
+  - Set up the interrupt tables.
+
+We should also have a very simple SATA and FAT driver, written in C,
+for the bootloader. With this we can look on the disk for the
+hypervisor kernel (an ELF file, so we need an ELF reader/loader too),
+pull it into memory, and jump to it.

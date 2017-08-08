@@ -1,0 +1,76 @@
+# First argument: the hard drive that needs partitioning.
+HD=$1;
+label=$(./disklabel -r -m $HD)
+soffset=$(echo "$label" | sed -n "s/Slice 0: starts \(.*\), ends.*/\1/p")
+offset=$(echo "$label" | sed -n '/Partition 1:/ {
+	n
+	s/\tOffset: \(.*\)/\1/
+	p
+	q
+}')
+BEAR_BIN=../../build.x86_64/bin
+sudo losetup -o $(($offset + $soffset)) /dev/loop1 $HD
+sudo mkfs.msdos /dev/loop1
+mkdir partition
+sudo mount /dev/loop1 partition
+#
+# NOTE: 10 character limit on file system names
+#
+#sudo cp $BEAR_BIN/netbsd_nfs partition/kernel
+# FULL SYSTEM -- use next two code lines, comment out following
+# code line, add back VTD_HACK define in sys/kernel/CMakelists.txt
+
+#######################
+# Loaded into RAM Disk
+#######################
+
+sudo cp $BEAR_BIN/kboot2 partition/kboot2
+sudo cp $BEAR_BIN/boot2 partition/boot2
+
+# these two lines for booting bear kernel AND hypervisor
+sudo cp $BEAR_BIN/hypv partition/binaryte
+sudo cp $BEAR_BIN/kernel partition/kernel
+
+# this line for booting bear kernel WITHOUT hypervisor.
+#sudo cp $BEAR_BIN/kernel partition/binaryte
+
+#daemons, shell, and tools - no networking, nfs, or test script
+sudo cp $BEAR_BIN/vgad partition/vgad
+sudo cp $BEAR_BIN/kbd partition/kbd
+sudo cp $BEAR_BIN/sysd partition/sysd
+sudo cp $BEAR_BIN/slash partition/slash
+sudo cp $BEAR_BIN/ps partition/ps
+sudo cp $BEAR_BIN/tramp partition/tramp
+sudo cp $BEAR_BIN/piped partition/piped
+sudo cp $BEAR_BIN/ifconfig partition/ifconfig
+sudo cp $BEAR_BIN/reboot partition/reboot
+
+# tests
+sudo cp $BEAR_BIN/../usr.test.bin/tprinter partition/tprinter
+sudo cp $BEAR_BIN/../usr.test.bin/tmalloc partition/tmalloc
+sudo cp $BEAR_BIN/../usr.test.bin/tcmdln partition/tcmdln
+sudo cp $BEAR_BIN/../usr.test.bin/texit partition/texit
+sudo cp $BEAR_BIN/../usr.test.bin/t12 partition/t12
+sudo cp $BEAR_BIN/../usr.test.bin/tq1 partition/tq1
+sudo cp $BEAR_BIN/../usr.test.bin/tq2 partition/tq2
+sudo cp $BEAR_BIN/../usr.test.bin/tq3 partition/tq3
+sudo cp $BEAR_BIN/../usr.test.bin/tq4 partition/tq4
+sudo cp $BEAR_BIN/../usr.test.bin/thash partition/thash
+sudo cp $BEAR_BIN/../usr.test.bin/tshash partition/tshash
+sudo cp $BEAR_BIN/../usr.test.bin/echo partition/echo
+sudo cp $BEAR_BIN/../usr.test.bin/tenv partition/tenv
+sudo cp $BEAR_BIN/../usr.test.bin/trefresh partition/trefresh
+sudo cp $BEAR_BIN/../usr.test.bin/tpiped partition/tpiped
+
+###########################
+# NOTHING Loaded into NFS /bear/bin 
+###########################
+# just clear it out
+sudo rm -f /bear/bin/*
+
+sleep 2
+sudo umount partition
+sleep 2 # so losetup -d won't fail
+sync
+sudo losetup -d /dev/loop1
+rmdir partition

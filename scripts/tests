@@ -1,0 +1,41 @@
+# command line tests
+tcmdln
+tcmdln 123
+tcmdln 123 foobar
+tcmdln 123 foobar 3.142
+tcmdln 123 foobar 3.142 bill
+# exit and return test
+texit 1
+texit 2
+texit 3
+texit 4
+# environment variables
+tenv
+# user malloc
+tmalloc 1000 1000000
+# basic queue operations
+tq1
+# queue operations on big stuctures
+tq2 800 10000
+# complex queue operations
+tq3
+tq4
+# general hashing
+thash 10000
+# sequenced hashing
+tshash 10000
+# generic daemon
+tdaemond daemond
+# socket functions
+tnetfns
+# nfs file operations
+tnfsd
+# nfs directory operations
+tnfsd2
+# general file io
+tfile
+# piped test
+tpiped
+# ps and do stats
+ps -s
+# must end in a new line!!!

@@ -1,0 +1,3 @@
+The files in this directory are ONLY included when building the 
+Network Daemon NETD. To use sockets all programs use the socket api
+provided by "usr/include/socket.h".

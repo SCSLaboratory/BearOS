@@ -1,0 +1,55 @@
+#!/bin/bash
+if [ $# != 1 ]; then
+    echo "Usage: start_dhcp <interface> -- e.g. eth0 or eth1" ;
+    echo "NOTE: use ifconfig to determin which interface is in use" ;
+    exit
+fi
+#check the argument is correct
+if [ $1 != "eth0" ] && [ $1 != "eth1" ] && [ $1 != "eth2" ] && [ $1 != "eth3" ] && [ $1 != "eth4" ]; then
+    echo "[Error -- <interface> must be eth0-4]" ;
+    exit
+fi
+echo [Starting dhcp on $1]
+# Get current working directory without path
+cwd=${PWD##*/}
+# Make sure its in the right place
+if [ ${cwd} != "build.x86_64" ]
+then
+echo "[This script must be installed and exectued in: bear-vXXX/build.x86_64]" ;
+echo "[You are in: ${cwd}]" ;
+exit
+fi
+# Give them a chance to reconsider...
+read -p "Continue? (y/n): " yn
+case ${yn} in
+[Yy]* )
+     ;;
+* )
+     echo "[Stopped]"; exit ;;
+esac
+echo "[Proceeding...]"
+# whack any running dhcp server
+sudo pkill dhcpd3
+# configure the network interface on the server
+echo "[Configuring $1 interface]"
+sudo ifconfig $1 down
+sudo ifconfig $1 up
+sudo ifconfig $1 192.168.0.2 netmask 255.255.255.0 broadcast 192.168.0.255
+# make sure tftp is running...
+echo "[Starting tftp server]"
+sudo service tftpd-hpa start
+sudo service tftpd-hpa restart
+# make sure nfs is running...
+echo "[Restarting nfs server]"
+sudo service nfs-kernel-server restart
+# run dhcp in background
+echo "[Starting DHCP on $1... ]"
+sudo ln -sf /var/run/dhcp3-server/dhcpd.pid /var/run/dhcpd.pid
+sudo dhcpd3 -cf /etc/dhcp3/dhcpd.conf $1 &
+# verify its running
+ps -ale | grep dhcpd3
+echo "[Check DHCP running on $1]"
+
+
+
+

@@ -1,0 +1,5 @@
+OUTPUT_FORMAT(elf64-x86-64);
+ENTRY(hentry);
+SECTIONS {
+	. = 0x10000000000;
+}

@@ -1,0 +1,101 @@
+The subdirectory "daemond" provides an example Bear Daemon
+
+This example shows the general form of a Bear Daemon to be used as a
+starting point for any new daemon development. 
+
+NOTE: All daemon names end with a "d" -- e.g. daemond, vgad, kbd, etc.
+
+Every daemon is comprised of the following files: 
+
+      1) The daemon interface (e.g. daemond.h), 
+      2) The daemon implementation (e.g. daemond.c),
+      3) A Printing Interface (e.g. daemond_utils.c), 
+      4) A Communication Interface (e.g. daemond_if.c), and
+      5) A regression test code (e.g. tdaemond.c). 
+
+The CMakeLists.txt file builds both the daemon (using 2&3) and an
+interface libarary (using 3&4) that can be used to communcation with
+the daemon.
+
+
+THE DAEMON INTERFACE (1) ALWAYS SPECIFIES:
+
+    1) The default daemon id (negative value) for the daemon used when
+    it is installed in the system.  (e.g. "#define DAEMOND (-100)"),
+
+    2) A set of message types used by the daemon.
+
+    3) A union of all the message types that can be used to define a 
+    message buffer.
+
+    4) Macros for extracting fields from the messages.
+    (e.g. type(msg), value(msg))
+
+    5) An exported printing function, provided by the daemon, that can
+    be used to print daemon messages to a file (or stdout). This
+    function is implemented in daemon_utils.c and used in both the 
+    daemon and its test.
+
+    6) A set of communication functions that allow OTHER processes to
+    communciation with the daemon. These functions are implemented in
+    the daemond_if.c file
+
+Note that in the future, daemons will be restarted independently and
+so their PID will change over time. For this reason, the static value
+(e.g. DAEMOND defined in sys/syspid.h) is never used in the daemon
+interface.
+
+
+THE DAEMON IMPLEMENTATION (2) always exports a single function main
+that repeatedly recieves messages, performs actions, and responds to
+each message.
+
+The Printing Interface (3) can be used by any process (including the
+daemon itself) to print messages to/from the deamon.
+
+The Communication Interface (4) is used by OTHER processes ONLY to
+communicate with the daemon; it includes a function for generating
+every message that the daemon can accept and respond to in the correct
+format.
+
+Every daemon include <msg.h> in order to communicate via the bear
+system using the "sendmsg" & "recvmsg" system calls.
+
+In general the daemon implementataion (2), printing interface (3) and
+communciation interface (4) are placed in
+"bear.version/usr/sbin/<daemond>", the interface will be placed in
+"bear.version/usr/include/sbin", and the test will be placed in
+"bear.version/usr/test".
+
+
+TO DEVELOP OF A NEW DAEMON:
+
+    1) Use the "create-daemon" shell script; you must be in the
+    usr/sbin/deamond to use it. This will copy and modify the example
+    daemon code and creat a new deamon. Assuming the name of the
+    daemon is "newd", you would execute the script using:
+
+    	    ./create-daemon newd NEWD
+
+    Note that the new deamons name ends in a 'd', and that the name of
+    the new deamon is provided in both lower and uppercase form.  The
+    new deamon will be created in "../newd". The script provides
+    installation instructions to add the daemon and its test to the
+    bear system when it exits.
+
+    2) BEFORE you make any changes: Run "tnewd" at the shell to
+    execute the new daemons regression test; check that it performs
+    exactly as the original daemond test.
+
+    3) Add implmentations for all new messages serviced by the new
+    daemon, continually retesting until the deamons implementation is
+    complete.
+
+    4) Install the daemon in the bear boot chain to run it as part of
+    the system by determining its order in the boot sequence and its
+    associated system ID (a negative number); make sure the modify the
+    daemons interface to designate the daemons ID.
+
+
+
+

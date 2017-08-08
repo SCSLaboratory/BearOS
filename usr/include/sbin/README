@@ -1,0 +1,4 @@
+This directory contains only files used to interface with a daemon or
+used by multiple daemons. Include files that are used by only a single
+daemon are placed in an include directory associated with the daemon
+in /usr/sbin.

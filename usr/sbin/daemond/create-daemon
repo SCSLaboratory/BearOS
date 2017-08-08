@@ -1,0 +1,68 @@
+#!/bin/bash
+# Get current working directory without path
+cwd=${PWD##*/}
+# Make sure its in the right place
+if [ ${cwd} != "daemond" ]
+then
+    echo "[This script must be installed and executed in bear-vXXX/usr/sbin/daemond]" ;
+    echo "[Current Location: ${cwd}]" ;
+    exit
+fi
+if [ "$#" -ne 2 ]; then
+    echo "Usage: ./create-daemon <named> <NAMED> -- NOTE: ends in letter \"d\"" ;
+    echo " e.g.: ./create-daemon newd NEWD" ;
+    exit 1
+fi
+if [ -d ../$1 ]; then
+    echo "[Daemon already exists!! -- aborting]" ;
+    exit 1
+fi
+# build the new daemons directory
+mkdir ../$1
+# copy all the daemond files 
+cp CMakeLists.txt daemond.c daemond_utils.c daemond_if.c ../../include/sbin/daemond.h ../../test/tdaemond.c ../$1
+# go into the new daemons directory quietly
+pushd ../$1 > /dev/null
+# verify you are in the right place
+cwd=${PWD##*/}
+if [ ${cwd} != $1 ]
+then
+    echo "[Unable to cd into new daemon directory]" ;
+    echo "[Current Location: ${cwd}]" ;
+    exit
+fi
+# modify all the daemond files to use new daemons name
+sed "s/daemond/$1/g" < ./CMakeLists.txt > ./temp
+sed "s/DAEMOND/$2/g" < ./temp > ./CMakeLists.txt
+rm -f ./temp
+sed "s/daemond/$1/g" < ./daemond.c > ./temp
+sed "s/DAEMOND/$2/g" < ./temp > ./$1.c
+rm -f ./temp
+sed "s/daemond/$1/g" < ./daemond.h > ./temp
+sed "s/DAEMOND/$2/g" < ./temp > ./$1.h
+rm -f ./temp
+sed "s/daemond/$1/g" < ./daemond_utils.c > ./temp
+sed "s/DAEMOND/$2/g" < ./temp > ./$1_utils.c
+rm -f ./temp
+sed "s/daemond/$1/g" < ./daemond_if.c > ./temp
+sed "s/DAEMOND/$2/g" < ./temp > ./$1_if.c
+rm -f ./temp
+sed "s/daemond/$1/g" < ./tdaemond.c > ./temp
+sed "s/DAEMOND/$2/g" < ./temp > ./t$1.c
+rm -f ./temp
+# remove the old daemond files
+rm ./*daemond*.[ch]
+# output installation instructions but DONT DO IT FOR THEM for safety
+echo "-----------"
+echo "[New Daemon created in Location: ../${cwd}]" ;
+echo "To install it FROM ../${cwd}:" 
+echo "  1. add \"add_subdirectory($1)\" to: ../CMakeLists.txt" 
+echo "  2. mv -n $1.h ../../include/sbin --- NOTE: use -n - i.e. noclobber" 
+echo "  3. mv -n t$1.c ../../test   --- NOTE: use -n - i.e. noclobber"
+echo "  4. update ../../test/CMakeLists.txt to include t$1.c"
+echo "  5. add $1 amd t$1 to ../../../tools/fdisk/partition.sh"
+echo "  6. Add a test to: ../../../scripts/tests for regression testing"
+echo "      ie. t$1 $1"
+echo "  7. Rebuild and run \"t$1 $1\"or \": tests\""
+# go back quietly
+popd > /dev/null
